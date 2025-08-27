@@ -5,15 +5,17 @@ import 'package:flutter/foundation.dart';
 import 'package:trocado/app_module.dart';
 import 'package:trocado/app_resolver.dart';
 
+import 'package:trocado/modules/core/domain/constant/routes_constant.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Modugo.configure(
-    initialRoute: '/',
     module: AppModule(),
-    errorBuilder: AppResolver.error,
     debugLogDiagnostics: kDebugMode,
+    errorBuilder: AppResolver.failure,
     debugLogDiagnosticsGoRouter: kDebugMode,
+    initialRoute: RoutesConstant.splash.path,
   );
 
   runApp(AppResolver.app);
