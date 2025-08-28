@@ -6,7 +6,7 @@ import 'package:trocado/modules/splash/splash_module.dart';
 import 'package:trocado/modules/profile/profile_module.dart';
 import 'package:trocado/modules/transaction/transaction_module.dart';
 
-import 'package:trocado/modules/core/presentation/widgets/bottom_bar_widget.dart';
+import 'package:trocado/modules/core/presentation/widgets/bottom/bottom_bar_widget.dart';
 
 final class AppModule extends Module {
   @override
