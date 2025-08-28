@@ -3,6 +3,8 @@ import 'package:flutter/widgets.dart';
 
 import 'package:trocado/app_widget.dart';
 
+import 'package:trocado/modules/core/data/clients/database_client.dart';
+
 import 'package:trocado/modules/core/domain/constant/routes_constant.dart';
 
 import 'package:trocado/modules/core/presentation/widgets/load_widget.dart';
@@ -21,6 +23,8 @@ final class AppResolver {
   }
 
   static Future<List<Future<void>>> _dependencies() async {
-    return Future.value([Modugo.i.allReady()]);
+    final database = Modugo.get<DatabaseClient>();
+
+    return Future.value([Modugo.i.allReady(), database.ensureInitialized()]);
   }
 }
