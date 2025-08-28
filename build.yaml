@@ -1,22 +1,7 @@
-# Configuração para o build_runner
 targets:
   $default:
     builders:
-      # Configuração específica para o gerador do MobX
-      mobx_codegen:
-        # Desativa a geração de código para todos os arquivos por padrão.
+      mobx_codegen|mobx_codegen:
         generate_for:
-          - none
-
-# Configuração global para builders específicos
-builders:
-  # Nome do builder do MobX (encontrado na documentação do pacote)
-  mobx_codegen:
-    # Habilita a geração de código APENAS para arquivos que correspondem a este padrão.
-    # Esta linha diz: "gere código para qualquer arquivo .dart dentro de lib/ que
-    # termine com _store.dart ou _state.dart".
-    generate_for:
-      - lib/**_state.dart**
-      - lib/**_store.dart**
-  
-
+          - lib/**_store.dart
+          - lib/**_state.dart
