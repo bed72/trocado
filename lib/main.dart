@@ -15,7 +15,7 @@ Future<void> main() async {
     debugLogDiagnostics: kDebugMode,
     errorBuilder: AppResolver.failure,
     debugLogDiagnosticsGoRouter: kDebugMode,
-    initialRoute: RoutesConstant.home.path,
+    initialRoute: RoutesConstant.splash.path,
   );
 
   runApp(AppResolver.app);

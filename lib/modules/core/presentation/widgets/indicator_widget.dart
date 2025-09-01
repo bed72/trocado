@@ -10,11 +10,11 @@ class _IndicatorBox extends BoxPainter {
   void paint(Canvas canvas, Offset offset, ImageConfiguration configuration) {
     final paint = Paint()
       ..shader = const RadialGradient(
-        colors: [Colors.black, Colors.black],
-      ).createShader(Rect.fromCircle(center: offset, radius: 0))
+        colors: [Colors.red, Colors.redAccent],
+      ).createShader(Rect.fromCircle(center: offset, radius: 50))
       ..strokeWidth = 2
       ..isAntiAlias = true
-      ..strokeCap = StrokeCap.square;
+      ..strokeCap = StrokeCap.butt;
 
     canvas.drawLine(
       Offset(offset.dx, 0.5),

@@ -3,11 +3,21 @@ import 'package:flutter/material.dart';
 
 import 'package:trocado/modules/core/domain/constant/icons_constant.dart';
 import 'package:trocado/modules/core/domain/constant/routes_constant.dart';
+import 'package:trocado/modules/core/presentation/actions/quick_actions.dart';
 
 import 'package:trocado/modules/core/presentation/widgets/indicator_widget.dart';
 import 'package:trocado/modules/core/presentation/widgets/bottom_sheet_widget.dart';
 import 'package:trocado/modules/core/presentation/widgets/bottom/bottom_bar_menu_widget.dart';
 import 'package:trocado/modules/core/presentation/widgets/bottom/bottom_bar_item_widget.dart';
+
+enum _BottomBarItens {
+  transaction(position: 1),
+  profile(position: 2);
+
+  final int position;
+
+  const _BottomBarItens({required this.position});
+}
 
 class BottomBarWidget extends StatefulWidget {
   final StatefulNavigationShell shell;
@@ -22,43 +32,53 @@ class _BottomBarWidgetState extends State<BottomBarWidget>
     with TickerProviderStateMixin {
   int? _previousTabIndex;
 
-  final int _bottomSheetTab = 1;
-  final int _maxVisibleTabs = 3;
-
-  late final TabController _tabController;
+  late final int _maxVisible = 3;
+  late final TabController _controller;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _maxVisibleTabs, vsync: this);
-    _tabController.index = widget.shell.currentIndex;
+    _controller = TabController(vsync: this, length: _maxVisible);
+    _controller.index = widget.shell.currentIndex;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      quickAction(
+        action: (type) {
+          type == QuickActionsType.input.name
+              ? _onTap(_BottomBarItens.profile.position)
+              : _onTap(_BottomBarItens.transaction.position);
+        },
+      );
+    });
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   void _onTap(int index) {
     final branchIndex = index;
 
-    if (branchIndex == _bottomSheetTab) {
+    if (branchIndex == _BottomBarItens.transaction.position) {
       _buildBottomSheet();
       return;
     }
 
-    _setPreviousTabIndex();
-    setState(() => _tabController.index = branchIndex);
+    _setPreviousIndex();
+    setState(() => _controller.index = branchIndex);
     widget.shell.goBranch(
       branchIndex,
       initialLocation: branchIndex == widget.shell.currentIndex,
     );
   }
 
-  void _setPreviousTabIndex() {
-    if (_tabController.index == _bottomSheetTab) return;
-    _previousTabIndex = _tabController.index;
+  void _setPreviousIndex() {
+    if (_controller.index == _BottomBarItens.transaction.position) return;
+    _previousTabIndex = _controller.index;
   }
 
   bool _shouldHideBottomBar(BuildContext context) => RoutesConstant
@@ -82,7 +102,7 @@ class _BottomBarWidgetState extends State<BottomBarWidget>
                 tabs: _buildTabs(),
                 dividerHeight: 0.0,
                 enableFeedback: false,
-                controller: _tabController,
+                controller: _controller,
                 indicator: IndicatorWidget(),
                 dividerColor: Colors.transparent,
                 indicatorColor: Colors.transparent,
@@ -99,28 +119,28 @@ class _BottomBarWidgetState extends State<BottomBarWidget>
       child: GestureDetector(onTap: () {}, child: BottomBarMenuWidget()),
     ).whenComplete(() {
       setState(() {
-        _tabController.index = _previousTabIndex ?? 0;
+        _controller.index = _previousTabIndex ?? 0;
         widget.shell.goBranch(_previousTabIndex ?? 0);
       });
     });
   }
 
   List<Widget> _buildTabs() {
-    final selectedIndex = _tabController.index;
+    final selectedIndex = _controller.index;
 
     final items = [
-      ('Home', IconsConstant.house),
-      ('Transações', IconsConstant.coins),
-      ('Meu perfil', IconsConstant.user),
+      ('Home', IconsConstant.receipt, IconsConstant.receiptFilled),
+      ('Transações', IconsConstant.wallet, IconsConstant.walletFilled),
+      ('Meu perfil', IconsConstant.user, IconsConstant.userFilled),
     ];
 
     return List.generate(items.length, (index) {
-      final (label, iconName) = items[index];
       final isSelected = selectedIndex == index;
+      final (label, unselectedIcon, selectedIcon) = items[index];
 
       return BottomBarItemWidget(
-        icon: iconName,
         semanticLabel: label,
+        icon: isSelected ? selectedIcon : unselectedIcon,
         color: isSelected ? Colors.red : Colors.black38,
       );
     });

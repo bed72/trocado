@@ -8,7 +8,7 @@ Future<T?> bottomSheetScaffoldWidget<T>({
 }) => showModalBottomSheet<T>(
   useSafeArea: true,
   isScrollControlled: true,
-  context: modularNavigatorKey.currentContext!,
+  context: modugoNavigatorKey.currentContext!,
   builder: (BuildContext context) => Container(
     constraints: autoResize
         ? null

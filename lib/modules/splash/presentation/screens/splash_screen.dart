@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:modugo/modugo.dart';
 import 'package:flutter/material.dart';
 
@@ -7,21 +8,30 @@ class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _ProfileScreenState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _ProfileScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen> {
+  late final Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer(const Duration(seconds: 2), () {
+      if (mounted) context.go(RoutesConstant.home.path);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: TextButton(
-            onPressed: () => context.go(RoutesConstant.home.path),
-            child: Text('Splash'),
-          ),
-        ),
-      ),
+    return const Scaffold(
+      body: SafeArea(child: Center(child: Text('Splash'))),
     );
   }
 }
