@@ -10,13 +10,13 @@ void quickAction({required void Function(String) action}) {
 
 List<ShortcutItem> get _items => <ShortcutItem>[
   ShortcutItem(
-    icon: 'AppIcon',
+    // icon: 'AppIcon',
     localizedTitle: 'Nova saída',
     type: QuickActionsType.output.name,
     localizedSubtitle: 'Cadastrar nova saída',
   ),
   ShortcutItem(
-    icon: 'ic_launcher',
+    // icon: 'ic_launcher',
     localizedTitle: 'Nova entrada',
     type: QuickActionsType.input.name,
     localizedSubtitle: 'Cadastrar nova entrada',
