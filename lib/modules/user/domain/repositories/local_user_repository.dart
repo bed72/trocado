@@ -21,7 +21,7 @@ final class LocalUserRepository implements UserRepository {
   @override
   Future<AllUserRepository> all({required DatabaseConstant table}) async =>
       _datasource
-          .all(table.value)
+          .all(table.name)
           .mapRight((data) => UserDto.fromJsons(data).first)
           .mapLeft(
             (_) => 'Opss, não encontramos seus dados, tente mais tarde!',
@@ -32,7 +32,7 @@ final class LocalUserRepository implements UserRepository {
     required UserDto data,
     required DatabaseConstant table,
   }) async {
-    _datasource.upsert(table.value, data.toJson());
+    _datasource.upsert(table.name, data.toJson());
   }
 
   @override
@@ -40,6 +40,6 @@ final class LocalUserRepository implements UserRepository {
     required UserDto data,
     required DatabaseConstant table,
   }) async {
-    _datasource.upsert(table.value, data.toJson());
+    _datasource.upsert(table.name, data.toJson());
   }
 }

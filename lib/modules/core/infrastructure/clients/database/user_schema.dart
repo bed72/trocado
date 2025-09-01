@@ -3,7 +3,7 @@ import 'package:tostore/tostore.dart';
 import 'package:trocado/modules/core/domain/constant/database_constant.dart';
 
 final userSchema = TableSchema(
-  name: DatabaseConstant.userTableName.value,
+  name: DatabaseConstant.userTableName.name,
   primaryKeyConfig: PrimaryKeyConfig(
     name: 'id',
     type: PrimaryKeyType.timestampBased,

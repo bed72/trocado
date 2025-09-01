@@ -1,8 +1,9 @@
 import 'package:modugo/modugo.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import 'package:trocado/modules/core/domain/constant/icons_constant.dart';
 import 'package:trocado/modules/core/domain/constant/routes_constant.dart';
+
 import 'package:trocado/modules/core/presentation/widgets/indicator_widget.dart';
 import 'package:trocado/modules/core/presentation/widgets/bottom_sheet_widget.dart';
 import 'package:trocado/modules/core/presentation/widgets/bottom/bottom_bar_menu_widget.dart';
@@ -108,21 +109,19 @@ class _BottomBarWidgetState extends State<BottomBarWidget>
     final selectedIndex = _tabController.index;
 
     final items = [
-      ('Home', PhosphorIcons.house),
-      ('Transações', PhosphorIcons.coins),
-      ('Meu perfil', PhosphorIcons.user),
+      ('Home', IconsConstant.house),
+      ('Transações', IconsConstant.coins),
+      ('Meu perfil', IconsConstant.user),
     ];
 
     return List.generate(items.length, (index) {
+      final (label, iconName) = items[index];
       final isSelected = selectedIndex == index;
-      final (label, iconBuilder) = items[index];
 
       return BottomBarItemWidget(
-        icon: iconBuilder(
-          isSelected ? PhosphorIconsStyle.fill : PhosphorIconsStyle.regular,
-        ),
-        color: isSelected ? Colors.red : Colors.black38,
+        icon: iconName,
         semanticLabel: label,
+        color: isSelected ? Colors.red : Colors.black38,
       );
     });
   }

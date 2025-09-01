@@ -32,7 +32,7 @@ void main() {
     group('all', () {
       test('should return first user on success', () async {
         when(
-          () => datasource.all(table.value),
+          () => datasource.all(table.name),
         ).thenAnswer((_) async => Right([userDto.toJson()]));
 
         final response = await repository.all(table: table);
@@ -40,12 +40,12 @@ void main() {
         expect(response.isRight, isTrue);
         expect(response.right.id, equals('1'));
         expect(response.right.name, equals('Gabriel'));
-        verify(() => datasource.all(table.value)).called(1);
+        verify(() => datasource.all(table.name)).called(1);
       });
 
       test('should return error message on failure', () async {
         when(
-          () => datasource.all(table.value),
+          () => datasource.all(table.name),
         ).thenAnswer((_) async => Left(null));
 
         final result = await repository.all(table: table);
@@ -55,35 +55,31 @@ void main() {
           result.left,
           'Opss, não encontramos seus dados, tente mais tarde!',
         );
-        verify(() => datasource.all(table.value)).called(1);
+        verify(() => datasource.all(table.name)).called(1);
       });
     });
 
     group('insert', () {
       test('should call upsert with correct parameters', () async {
         when(
-          () => datasource.upsert(table.value, any()),
+          () => datasource.upsert(table.name, any()),
         ).thenAnswer((_) async {});
 
         await repository.insert(data: userDto, table: table);
 
-        verify(
-          () => datasource.upsert(table.value, userDto.toJson()),
-        ).called(1);
+        verify(() => datasource.upsert(table.name, userDto.toJson())).called(1);
       });
     });
 
     group('update', () {
       test('should call upsert with correct parameters', () async {
         when(
-          () => datasource.upsert(table.value, any()),
+          () => datasource.upsert(table.name, any()),
         ).thenAnswer((_) async {});
 
         await repository.update(data: userDto, table: table);
 
-        verify(
-          () => datasource.upsert(table.value, userDto.toJson()),
-        ).called(1);
+        verify(() => datasource.upsert(table.name, userDto.toJson())).called(1);
       });
     });
 

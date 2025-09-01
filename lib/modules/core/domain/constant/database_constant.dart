@@ -1,9 +1,9 @@
 enum DatabaseConstant {
-  databaseName(value: 'tocado'),
+  databaseName(name: 'tocado'),
 
-  userTableName(value: 'users');
+  userTableName(name: 'users');
 
-  final String value;
+  final String name;
 
-  const DatabaseConstant({required this.value});
+  const DatabaseConstant({required this.name});
 }

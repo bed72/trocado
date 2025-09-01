@@ -12,7 +12,7 @@ final class TostoreDatabaseClient implements DatabaseClient {
   ToStore get database => ToStore(
     config: _config,
     schemas: _schemas,
-    dbName: DatabaseConstant.databaseName.value,
+    dbName: DatabaseConstant.databaseName.name,
   );
 
   @override
@@ -23,7 +23,7 @@ final class TostoreDatabaseClient implements DatabaseClient {
   DataStoreConfig get _config => DataStoreConfig(
     enableLog: kDebugMode,
     logLevel: LogLevel.debug,
-    dbName: DatabaseConstant.databaseName.value,
+    dbName: DatabaseConstant.databaseName.name,
   );
 
   List<TableSchema> get _schemas => [userSchema];
