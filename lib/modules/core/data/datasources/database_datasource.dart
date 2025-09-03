@@ -1,4 +1,4 @@
-import 'package:either_dart/either.dart';
+import 'package:trocado/modules/core/domain/either.dart';
 
 typedef AllDatabaseDatasource = Either<Null, List<Map<String, dynamic>>>;
 

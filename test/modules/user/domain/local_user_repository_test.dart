@@ -1,31 +1,34 @@
 import 'package:mocktail/mocktail.dart';
-import 'package:either_dart/either.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:trocado/modules/core/domain/either.dart';
 import 'package:trocado/modules/core/domain/constant/database_constant.dart';
 import 'package:trocado/modules/core/data/datasources/database_datasource.dart';
 
 import 'package:trocado/modules/user/data/dtos/user_dto.dart';
+import 'package:trocado/modules/user/data/mappers/user_mapper.dart';
 import 'package:trocado/modules/user/data/repositories/user_repository.dart';
 import 'package:trocado/modules/user/domain/repositories/local_user_repository.dart';
 
 final class MockDatabaseDatasource extends Mock implements DatabaseDatasource {}
 
 void main() {
+  late UserMapper mapper;
   late UserRepository repository;
   late DatabaseDatasource datasource;
 
   setUp(() {
+    mapper = UserMapper();
     datasource = MockDatabaseDatasource();
-    repository = LocalUserRepository(datasource: datasource);
+    repository = LocalUserRepository(mapper: mapper, datasource: datasource);
   });
 
   group('LocalUserRepository', () {
     final table = DatabaseConstant.userTableName;
-    final userDto = UserDto(
+    final dto = UserDto(
       id: '1',
       name: 'Gabriel',
-      password: '123',
+      password: '123456',
       email: 'gabriel@test.com',
     );
 
@@ -33,7 +36,7 @@ void main() {
       test('should return first user on success', () async {
         when(
           () => datasource.all(table.name),
-        ).thenAnswer((_) async => Right([userDto.toJson()]));
+        ).thenAnswer((_) async => Right([mapper.toJson(dto)]));
 
         final response = await repository.all(table: table);
 
@@ -65,9 +68,11 @@ void main() {
           () => datasource.upsert(table.name, any()),
         ).thenAnswer((_) async {});
 
-        await repository.insert(data: userDto, table: table);
+        await repository.insert(data: dto, table: table);
 
-        verify(() => datasource.upsert(table.name, userDto.toJson())).called(1);
+        verify(
+          () => datasource.upsert(table.name, mapper.toJson(dto)),
+        ).called(1);
       });
     });
 
@@ -77,9 +82,11 @@ void main() {
           () => datasource.upsert(table.name, any()),
         ).thenAnswer((_) async {});
 
-        await repository.update(data: userDto, table: table);
+        await repository.update(data: dto, table: table);
 
-        verify(() => datasource.upsert(table.name, userDto.toJson())).called(1);
+        verify(
+          () => datasource.upsert(table.name, mapper.toJson(dto)),
+        ).called(1);
       });
     });
 

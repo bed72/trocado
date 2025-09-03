@@ -1,4 +1,4 @@
-import 'package:either_dart/either.dart';
+import 'package:trocado/modules/core/domain/either.dart';
 
 import 'package:trocado/modules/user/data/dtos/user_dto.dart';
 import 'package:trocado/modules/core/domain/constant/database_constant.dart';
