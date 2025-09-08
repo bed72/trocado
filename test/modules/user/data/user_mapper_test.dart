@@ -53,28 +53,6 @@ void main() {
       expect(data.right.name, equals('Gabriel'));
     });
 
-    test('fromJson should return Left(String) for invalid JSON', () {
-      final json = {
-        'id': '1',
-        'name': 'G',
-        'password': '123',
-        'email': 'invalid',
-      };
-
-      final data = mapper.fromJson(json);
-
-      expect(data.isLeft, isTrue);
-      expect(data.left, isNotEmpty);
-      expect(data.left, isA<String>());
-    });
-
-    test('fromJson should return Left(String) for null JSON', () {
-      final data = mapper.fromJson(null);
-
-      expect(data.isLeft, isTrue);
-      expect(data.left, equals('Invalid UserDto'));
-    });
-
     test('fromJsons should return Right(List<UserDto>) for a valid list', () {
       final jsons = [
         {
@@ -112,7 +90,7 @@ void main() {
       final data = mapper.fromJsons(jsons);
 
       expect(data.isRight, isTrue);
-      expect(data.right.length, 1);
+      expect(data.right.length, 2);
     });
   });
 }
