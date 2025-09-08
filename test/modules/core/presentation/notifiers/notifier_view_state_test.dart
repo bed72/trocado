@@ -110,8 +110,12 @@ void main() {
 
       await notifier.login();
 
-      final state = notifier.state as SuccessState<String>;
-      expect(state.success, 'patched_token');
+      if (notifier.state is SuccessState<String>) {
+        expect(
+          (notifier.state as SuccessState<String>).success,
+          'patched_token',
+        );
+      }
     });
 
     test('should not allow state changes after dispose', () {

@@ -23,10 +23,10 @@ final class _BaseBounceWidget extends BounceWidget {
   const _BaseBounceWidget({required super.child, required this.scale});
 
   @override
-  State<_BaseBounceWidget> createState() => __BaseBounceWidgetState();
+  State<_BaseBounceWidget> createState() => _BaseBounceWidgetState();
 }
 
-class __BaseBounceWidgetState extends State<_BaseBounceWidget> {
+class _BaseBounceWidgetState extends State<_BaseBounceWidget> {
   @override
   Widget build(BuildContext context) {
     return AnimatedScale(
