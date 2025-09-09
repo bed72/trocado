@@ -66,10 +66,8 @@ extension ViewStateExtension on ViewState {
   }) => switch (this) {
     InitialState() => initial?.call() ?? orElse(),
     LoadingState() => loading?.call() ?? orElse(),
-    SuccessState(success: final success) =>
-      success?.call(success as S) ?? orElse(),
-    FailureState(failure: final failure) =>
-      failure?.call(failure as F) ?? orElse(),
+    SuccessState(success: final succ) => success?.call(succ as S) ?? orElse(),
+    FailureState(failure: final fail) => failure?.call(fail as F) ?? orElse(),
   };
 
   /// Builds a [Widget] depending on the current state.
@@ -89,7 +87,7 @@ extension ViewStateExtension on ViewState {
   }) => switch (this) {
     InitialState() => initial?.call() ?? const SizedBox.shrink(),
     LoadingState() => loading?.call() ?? const CircularProgressIndicator(),
-    SuccessState(success: final success) => success(success),
-    FailureState(failure: final failure) => failure(failure),
+    FailureState(failure: final fail) => failure(fail as F),
+    SuccessState(success: final succ) => success(succ as S),
   };
 }

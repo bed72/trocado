@@ -80,12 +80,21 @@ class StateNotifierBuilder<T, N extends StateNotifier<T>>
 
 class _StateNotifierBuilderState<T, N extends StateNotifier<T>>
     extends State<StateNotifierBuilder<T, N>> {
-  late final N notifier;
+  late N notifier;
 
   @override
   void initState() {
     super.initState();
     notifier = widget.create();
+  }
+
+  @override
+  void didUpdateWidget(StateNotifierBuilder<T, N> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.create != widget.create) {
+      notifier.dispose();
+      notifier = widget.create();
+    }
   }
 
   @override
@@ -99,4 +108,26 @@ class _StateNotifierBuilderState<T, N extends StateNotifier<T>>
     animation: notifier,
     builder: (_, _) => widget.builder(context, notifier.state, notifier),
   );
+}
+
+final class StateNotifierSelectorBuilder<T, N extends StateNotifier<T>, S>
+    extends StatelessWidget {
+  final N notifier;
+  final S Function(T state) selector;
+  final Widget Function(BuildContext context, S selected) builder;
+
+  const StateNotifierSelectorBuilder({
+    super.key,
+    required this.notifier,
+    required this.selector,
+    required this.builder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: notifier,
+      builder: (_, __) => builder(context, selector(notifier.state)),
+    );
+  }
 }

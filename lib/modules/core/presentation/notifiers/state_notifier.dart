@@ -2,20 +2,24 @@ import 'package:flutter/foundation.dart';
 
 /// A function type that intercepts and potentially transforms state changes.
 ///
-/// Middlewares run in the order they are registered and can:
+/// Middlewares run **in the order they were added** and can:
 /// - Transform the next state before it is applied.
 /// - Block a state change by returning the previous state.
 /// - Add side effects such as logging or analytics.
 ///
+/// Signature contract:
+/// - `next` is the candidate state about to be applied
+/// - `previous` is the current state before the change
+///
 /// Example:
 /// ```dart
-/// notifier.addMiddleware((next, prev) {
-///   if (next == prev) return prev; // block redundant updates
-///   print('State changing from $prev to $next');
+/// notifier.addMiddleware((next, previous) {
+///   if (next == previous) return previous; // block redundant updates
+///   debugPrint('State changing: $previous → $next');
 ///   return next;
 /// });
 /// ```
-typedef StateMiddleware<T> = T Function(T next, T previous);
+typedef StateMiddleware<T> = T Function(T previous, T next);
 
 /// Immutable event object representing a transition between two states.
 ///
@@ -25,12 +29,8 @@ typedef StateMiddleware<T> = T Function(T next, T previous);
 ///
 /// Example:
 /// ```dart
-/// notifier.onBeforeChange = (event) {
-///   print('Before: ${event.previous} → ${event.next}');
-/// };
-/// notifier.onAfterChange = (event) {
-///   print('After: ${event.previous} → ${event.next}');
-/// };
+/// notifier.onBeforeChange = (e) => debugPrint('Before: ${e.previous} → ${e.next}');
+/// notifier.onAfterChange  = (e) => debugPrint('After:  ${e.previous} → ${e.next}');
 /// ```
 final class StateChangeEvent<T> {
   /// The new state that will replace the previous one.
@@ -42,92 +42,86 @@ final class StateChangeEvent<T> {
   const StateChangeEvent({required this.next, required this.previous});
 }
 
-/// A reactive state holder inspired by [ChangeNotifier] but with additional capabilities.
+/// A reactive, dependency-free state holder inspired by [ChangeNotifier]
+/// with extra capabilities:
 ///
-/// Compared to a plain [ChangeNotifier], `StateNotifier` offers:
-/// - Strongly typed immutable state via [state].
-/// - Automatic notifications whenever [state] is updated.
+/// - Strongly typed, immutable-style state via [state].
+/// - `emit`/`update` helpers for ergonomic state changes.
 /// - Middlewares to intercept, transform or block updates.
 /// - Before/after change callbacks for side effects (logging, metrics).
 /// - State history for debugging or time travel.
 /// - Optional auto-dispose when no listeners remain.
 /// - Granular selectors that allow observing only parts of the state.
 ///
-/// This makes it a lightweight alternative to solutions like MobX or Riverpod,
-/// while remaining simple and dependency-free.
+/// This makes it a lightweight alternative to more opinionated solutions,
+/// while remaining simple and testable.
 ///
-/// ## Example
+/// ## Quick example
 ///
 /// ```dart
 /// class CounterNotifier extends StateNotifier<int> {
 ///   CounterNotifier() : super(0);
 ///
-///   void increment() => state = state + 1;
-///   void decrement() => state = state - 1;
+///   void increment() => update((c) => c + 1);
+///   void decrement() => emit(state - 1);
 /// }
 ///
-/// final counter = CounterNotifier();
-///
-/// counter.addListener(() {
-///   print('New state: ${counter.state}');
-/// });
-///
-/// counter.increment(); // prints: New state: 1
+/// final counter = CounterNotifier()
+///   ..addMiddleware((next, prev) => next < 0 ? prev : next); // disallow negatives
 /// ```
 ///
 /// ## Granular selectors
 ///
+/// Use [select] to listen only to a projection of the state (reduces rebuilds):
+///
 /// ```dart
-/// class User {
-///   final String name;
-///   final int age;
-///   const User(this.name, this.age);
-/// }
-///
-/// class UserNotifier extends StateNotifier<User> {
-///   UserNotifier() : super(const User('Alice', 20));
-///   void setName(String name) => state = User(name, state.age);
-///   void setAge(int age) => state = User(state.name, age);
-/// }
-///
-/// final userNotifier = UserNotifier();
-///
-/// // Listen only to changes in the `name` field
+/// final nameListenable = userNotifier.select((u) => u.name);
 /// ValueListenableBuilder(
-///   valueListenable: userNotifier.select((u) => u.name),
-///   builder: (_, name, _) => Text('Name: $name'),
+///   valueListenable: nameListenable,
+///   builder: (_, name, __) => Text('Name: $name'),
 /// );
 /// ```
 abstract class StateNotifier<T> extends ChangeNotifier {
+  /// Creates a new [StateNotifier] with the given initial [state].
+  ///
+  /// If [autoDispose] is true, the notifier will automatically call [dispose]
+  /// once the last listener is removed.
+  StateNotifier(this._state, {this.autoDispose = false});
+
+  // ----------------------- Internal fields -----------------------
+
   T _state;
+  bool _disposed = false;
   final bool autoDispose;
   final List<T> _history = [];
   final List<StateMiddleware<T>> _middlewares = [];
 
+  /// Registry of active granular selectors.
+  final List<_SelectorSubscription<T, dynamic>> _selectors = [];
+
+  // ----------------------- Lifecycle & flags ---------------------
+
   /// Whether this notifier has already been disposed.
-  bool _disposed = false;
+  bool get disposed => _disposed;
 
   /// Callback invoked when [dispose] is called.
   VoidCallback? onDispose;
 
+  // ----------------------- State accessors -----------------------
+
   /// The current state value.
   T get state => _state;
-  bool get disposed => _disposed;
 
-  /// Immutable history of all previously applied states.
+  /// Immutable history of all **applied** states (snapshots *after* middlewares).
   List<T> get history => List.unmodifiable(_history);
 
-  /// Callback invoked right after the state has been updated.
-  void Function(StateChangeEvent<T> event)? onAfterChange;
+  // ----------------------- Hooks & middleware --------------------
 
   /// Callback invoked right before the state is updated.
   void Function(StateChangeEvent<T> event)? onBeforeChange;
 
-  /// Creates a new [StateNotifier] with the given initial [state].
-  ///
-  /// If [autoDispose] is true, the notifier will automatically
-  /// call [dispose] once the last listener is removed.
-  StateNotifier(this._state, {this.autoDispose = false});
+  /// Callback invoked right after the state has been updated.
+  void Function(StateChangeEvent<T> event)? onAfterChange;
 
   /// Registers a [middleware] that will be executed for every state change.
   ///
@@ -139,9 +133,56 @@ abstract class StateNotifier<T> extends ChangeNotifier {
     _middlewares.add(middleware);
   }
 
-  /// Updates the state and notifies listeners if the value has changed.
+  // ----------------------- Emission APIs (Cubit-like) ------------
+
+  /// Emits a new state synchronously, just like Cubit's `emit`.
   ///
-  /// - Applies all registered [middlewares].
+  /// This will go through middlewares, call before/after callbacks,
+  /// update history, notify listeners and selectors, and respect disposal.
+  @nonVirtual
+  void emit(T value) {
+    state = value; // delegate to the protected setter
+  }
+
+  /// Tries to emit a new state. Returns `false` if this notifier is disposed.
+  @nonVirtual
+  bool tryEmit(T value) {
+    if (_disposed) return false;
+    state = value;
+    return true;
+  }
+
+  /// Computes a new state based on the current one, then emits it.
+  ///
+  /// Useful to avoid reading and writing in two steps:
+  ///   `update((prev) => prev.copyWith(...));`
+  @nonVirtual
+  void update(T Function(T previous) reducer) {
+    final next = reducer(_state);
+    state = next;
+  }
+
+  /// Emits `value` only if [test] returns true for `(previous, next)`.
+  @nonVirtual
+  void emitIf(bool Function(T previous, T next) test, T value) {
+    if (test(_state, value)) state = value;
+  }
+
+  /// Emits `value` only if it differs from the current state.
+  ///
+  /// Provide a custom [equals] if you need structural equality
+  /// different from `==`.
+  @nonVirtual
+  void emitWhenChanged(T value, {bool Function(T a, T b)? equals}) {
+    final eq = equals ?? (T a, T b) => a == b;
+    if (!eq(_state, value)) state = value;
+  }
+
+  // ----------------------- Core state update ---------------------
+
+  /// Updates the state and notifies listeners **if** the value has changed.
+  ///
+  /// - Applies all registered [middlewares] **in order**.
   /// - Invokes [onBeforeChange] before updating.
   /// - Appends the new state to [history].
   /// - Notifies listeners and granular selectors.
@@ -154,11 +195,13 @@ abstract class StateNotifier<T> extends ChangeNotifier {
       );
     }
 
+    // Apply middlewares (respect typedef: (next, previous))
     T next = value;
     for (final mw in _middlewares) {
       next = mw(_state, next);
     }
 
+    // Short-circuit if nothing changed
     if (next == _state) return;
 
     final event = StateChangeEvent(previous: _state, next: next);
@@ -167,14 +210,14 @@ abstract class StateNotifier<T> extends ChangeNotifier {
     _history.add(next);
     _state = next;
 
+    // Notify listeners and selectors
     notifyListeners();
-    _notifySelectors(_state, event);
+    _notifySelectors(_state);
 
     onAfterChange?.call(event);
   }
 
-  /// Internal registry of active selectors for granular subscriptions.
-  final List<_SelectorSubscription<T, dynamic>> _selectors = [];
+  // ----------------------- Selectors (granular) ------------------
 
   /// Creates a granular [ValueListenable] for a specific projection of the state.
   ///
@@ -184,7 +227,7 @@ abstract class StateNotifier<T> extends ChangeNotifier {
   ///
   /// ValueListenableBuilder(
   ///   valueListenable: nameListenable,
-  ///   builder: (_, name, _) => Text(name),
+  ///   builder: (_, name, __) => Text(name),
   /// );
   /// ```
   ValueListenable<P> select<P>(P Function(T state) selector) {
@@ -193,11 +236,13 @@ abstract class StateNotifier<T> extends ChangeNotifier {
     return subscription;
   }
 
-  void _notifySelectors(T newState, StateChangeEvent<T> event) {
+  void _notifySelectors(T newState) {
     for (final sub in _selectors) {
       sub.update(newState);
     }
   }
+
+  // ----------------------- ChangeNotifier overrides --------------
 
   @override
   void removeListener(VoidCallback listener) {
@@ -233,12 +278,13 @@ abstract class StateNotifier<T> extends ChangeNotifier {
 ///
 /// ValueListenableBuilder(
 ///   valueListenable: ageListenable,
-///   builder: (_, age, _) => Text('$age years old'),
+///   builder: (_, age, __) => Text('$age years old'),
 /// );
 /// ```
 class _SelectorSubscription<T, P> extends ChangeNotifier
     implements ValueListenable<P> {
   P _lastValue;
+
   final P Function(T) selector;
 
   @override
