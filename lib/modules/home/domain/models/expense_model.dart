@@ -1,3 +1,5 @@
+enum ExpenseEvent { cleared, invalidExpense }
+
 final class ExpenseModel {
   final String id;
   final String title;

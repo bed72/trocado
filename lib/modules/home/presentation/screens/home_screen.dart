@@ -1,11 +1,18 @@
-import 'dart:math';
+// import 'dart:math';
+
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 
 import 'package:trocado/modules/home/domain/models/expense_model.dart';
-import 'package:trocado/modules/home/presentation/notifiers/expense_notifier.dart';
 
+import 'package:trocado/modules/core/presentation/viewmodels/livedata.dart';
+import 'package:trocado/modules/core/presentation/viewmodels/eventqueue.dart';
+import 'package:trocado/modules/home/presentation/viewmodels/expense_viewmodel.dart';
+
+/*
 import 'package:trocado/modules/core/presentation/states/view_state.dart';
+import 'package:trocado/modules/home/presentation/notifiers/expense_notifier.dart';
 import 'package:trocado/modules/core/presentation/builders/state_notifier_builder.dart';
 import 'package:trocado/modules/core/presentation/extensions/view_state_extension.dart';
 
@@ -313,6 +320,59 @@ class _FabActions extends StatelessWidget {
           icon: const Icon(Icons.refresh),
         ),
       ],
+    );
+  }
+}
+*/
+
+class HomeScreen extends StatelessWidget {
+  final ExpensesViewModel viewModel = ExpensesViewModel();
+
+  HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    log('ROOT');
+    return SafeArea(
+      child: EventListener<ExpenseEvent>(
+        eventQueue: viewModel.events,
+        onEvent: (context, event) async => switch (event) {
+          ExpenseEvent.invalidExpense =>
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Invalid expense (<= 0)')),
+            ),
+          ExpenseEvent.cleared => ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('All expenses cleared'))),
+        },
+        child: Scaffold(
+          appBar: AppBar(title: const Text('Expenses')),
+          body: LiveDataBuilder<List<ExpenseModel>>(
+            liveData: viewModel.expenses,
+            builder: (_, expenses) => expenses.isEmpty
+                ? const Center(child: Text('No expenses yet'))
+                : ListView.builder(
+                    itemCount: expenses.length,
+                    itemBuilder: (_, index) {
+                      final expense = expenses[index];
+                      return ListTile(
+                        title: Text(expense.title),
+                        subtitle: Text(expense.date.toIso8601String()),
+                        trailing: Text(
+                          (expense.amount >= 0 ? '+' : '') +
+                              expense.amount.toStringAsFixed(2),
+                        ),
+                        onLongPress: () => viewModel.removeExpense(expense.id),
+                      );
+                    },
+                  ),
+          ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => viewModel.addExpense('Coffee', 15),
+            child: const Icon(Icons.add),
+          ),
+        ),
+      ),
     );
   }
 }
